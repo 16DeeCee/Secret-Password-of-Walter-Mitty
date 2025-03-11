@@ -1,1 +1,4 @@
 cryptography
+pillow
+requests
+SQLAlchemy
