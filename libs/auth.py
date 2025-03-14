@@ -60,7 +60,8 @@ class Auth:
         return comb_bytes
 
 
-    def verify_password(salt: str, plain_password: str, hashed_password: bytes) -> bool:
+    def verify_password(stored_hash: bytes, plain_password: str) -> bool:
+        salt, hashed_password = stored_hash[:SALT_FIXED_LENGTH], stored_hash[SALT_FIXED_LENGTH:]
         hash = Auth.argon_hash(salt)
 
         try:

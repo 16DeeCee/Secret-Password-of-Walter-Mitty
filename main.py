@@ -1,4 +1,7 @@
+from application.app import App
 import os
+
+app = App()
 
 def CREATE_FOLDER(path: str):
     if not os.path.exists(path):
@@ -7,4 +10,5 @@ def CREATE_FOLDER(path: str):
 CREATE_FOLDER("images")
 
 if __name__ == "__main__":
-    pass # run tkinter
+    # app.mainloop()
+    pass

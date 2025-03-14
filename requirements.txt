@@ -2,3 +2,5 @@ cryptography
 pillow
 requests
 SQLAlchemy
+python-dotenv
+customtkinter
