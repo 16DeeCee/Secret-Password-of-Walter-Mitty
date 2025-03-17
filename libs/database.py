@@ -65,6 +65,7 @@ class DBQuery:
         query = session.query(User).filter(User.username == user_name)
 
         return session.scalars(query).one_or_none()
+    
 
     def add_user(self, user_name: str, password: bytes):
 
@@ -83,7 +84,7 @@ class DBQuery:
             return user.username
         
         
-    def add_passwords(self, site_url, image_path, user_id):
+    def add_passwords(self, site_url: str, image_path: str, user_id: int):
         with self.Session() as session:
             password = Passwords(
                 site_url=site_url,
@@ -106,18 +107,15 @@ class DBQuery:
 
             return result > 0
         
-    def delete_password(self, user_id, image_path, site_url):
+    def delete_password(self, data):
         with self.Session() as session:
             result = session.query(Passwords).filter(
-                Passwords.user_id == user_id,
-                Passwords.image_path == image_path,
-                Passwords.site_url == site_url,
+                Passwords.pid == data.pid,
+                Passwords.user_id == data.user_id,
+                Passwords.image_path == data.image_path,
+                Passwords.site_url == data.site_url,
             ).delete()
 
             session.commit()
 
-
-            
-
-
-
+            return result > 0

@@ -1,29 +1,29 @@
-from customtkinter import *
-from libs.database import DBQuery
+import customtkinter as ctk
+from libs.database import User
 from libs.auth import Auth
 
-db = DBQuery()
 
-class LoginFrame(CTkFrame):
+class LoginFrame(ctk.CTkFrame):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         self.parent = parent
 
-        self.username_input = CTkEntry(self, placeholder_text="Username", height=35, width=200)
+        self.username_input = ctk.CTkEntry(self, placeholder_text="Username", height=35, width=200)
         self.username_input.pack(padx=10, pady=10)
-        self.password_input = CTkEntry(self, placeholder_text="Password", show="*", height=35, width=200)
+        self.password_input = ctk.CTkEntry(self, placeholder_text="Password", show="*", height=35, width=200)
         self.password_input.pack(padx=10, pady=10)
-        self.login_button = CTkButton(self, text="Login", height=35, width=200, command=self.handle_click_login)
+        self.login_button = ctk.CTkButton(self, text="Login", height=35, width=200, command=self.handle_click_login)
         self.login_button.pack(padx=10, pady=10)
 
-        self.register_label = CTkLabel(self, text="No account? Register here.", cursor="hand2", text_color="green")
+        self.register_label = ctk.CTkLabel(self, text="No account? Register here.", cursor="hand2", text_color="green")
         self.register_label.pack(padx=0, pady=20)
-        self.register_label.bind("<Button-1>", lambda e: self.parent.handle_switch_frame())
+        self.register_label.bind("<Button-1>", self.parent.handle_switch_frame)
+
 
     def handle_click_login(self):
         username, password = self.username_input.get(), self.password_input.get()
 
-        user = db.get_user_data(username)
+        user = self.parent.db.get_user_data(username)
 
         if not user:
             self.parent.message_label.configure(text=f"Incorrect username or password.")
@@ -33,27 +33,24 @@ class LoginFrame(CTkFrame):
             self.parent.message_label.configure(text=f"Incorrect username or password.")
             return
         
-        
-        self.parent.logged_in()
-        
+        self.parent.logged_in(user)
         
 
-
-class RegisterFrame(CTkFrame):
+class RegisterFrame(ctk.CTkFrame):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         self.parent = parent
 
-        self.username_input = CTkEntry(self, placeholder_text="Username", height=35, width=200)
+        self.username_input = ctk.CTkEntry(self, placeholder_text="Username", height=35, width=200)
         self.username_input.pack(padx=10, pady=10)
-        self.password_input = CTkEntry(self, placeholder_text="Password", show="*", height=35, width=200)
+        self.password_input = ctk.CTkEntry(self, placeholder_text="Password", show="*", height=35, width=200)
         self.password_input.pack(padx=10, pady=10)
-        self.confirm_password_input = CTkEntry(self, placeholder_text="Confirm Password", show="*", height=35, width=200)
+        self.confirm_password_input = ctk.CTkEntry(self, placeholder_text="Confirm Password", show="*", height=35, width=200)
         self.confirm_password_input.pack(padx=10, pady=10)
-        self.register_button = CTkButton(self, text="Register", height=35, width=200, command=self.handle_click_register)
+        self.register_button = ctk.CTkButton(self, text="Register", height=35, width=200, command=self.handle_click_register)
         self.register_button.pack(padx=10, pady=10)
 
-        self.register_label = CTkLabel(self, text="Already have an account? Login here.", cursor="hand2", text_color="green")
+        self.register_label = ctk.CTkLabel(self, text="Already have an account? Login here.", cursor="hand2", text_color="green")
         self.register_label.pack(padx=0, pady=20)
         self.register_label.bind("<Button-1>", lambda e: self.parent.handle_switch_frame())
 
@@ -68,7 +65,7 @@ class RegisterFrame(CTkFrame):
         
         try:
             hashed_password = Auth.generate_hash_key(password)
-            registered_user = db.add_user(user_name=username, password=hashed_password)
+            registered_user = self.parent.db.add_user(user_name=username, password=hashed_password)
         except ValueError:
             self.parent.message_label.configure(text=f"{registered_user} already exists.")
             return
@@ -89,20 +86,18 @@ class RegisterFrame(CTkFrame):
 
         if password != self.confirm_password_input.get():
             raise ValueError(f"Passwords do not match.")
-        
-    
 
+class LoginWindow(ctk.CTkToplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
 
-class LoginWindow(CTkToplevel):
-    def __init__(self, parent, **kwargs):
-        super().__init__(parent, **kwargs)
         self.geometry("600x400")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.title("Login")
         self.wm_protocol("WM_DELETE_WINDOW", self.handle_close_login)
 
-        self.message_label = CTkLabel(self, text="", text_color="white")
+        self.message_label = ctk.CTkLabel(self, text="", text_color="white")
         self.message_label.grid(row=0, column=0)
 
         self.login_frame = LoginFrame(self)
@@ -110,14 +105,16 @@ class LoginWindow(CTkToplevel):
         self.register_frame = RegisterFrame(self)
 
         self.parent = parent
+        self.db = self.parent.db
 
     def handle_close_login(self):
         self.destroy()
         self.parent.quit()
 
-    def logged_in(self):
+    def logged_in(self, user: User):
         self.parent.deiconify()
-
+        self.parent.user = user
+        self.parent.display_password_list()
         self.destroy()
 
 
@@ -127,7 +124,7 @@ class LoginWindow(CTkToplevel):
     
     def clear_text(self, entry):
         if entry.get() != "":
-            entry.delete(0, END)
+            entry.delete(0, ctk.END)
             entry._activate_placeholder()
             self.focus()
 
