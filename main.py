@@ -1,14 +1,15 @@
 from application.app import App
+from libs.database import DBQuery
 import os
 
 app = App()
+db = DBQuery()
 
-def CREATE_FOLDER(path: str):
-    if not os.path.exists(path):
-        os.mkdir(path)
+db.create_tables()
 
-CREATE_FOLDER("images")
+# folder for storing images
+if not os.path.exists("images"):
+    os.mkdir("images")
 
 if __name__ == "__main__":
-    # app.mainloop()
-    pass
+    app.mainloop()

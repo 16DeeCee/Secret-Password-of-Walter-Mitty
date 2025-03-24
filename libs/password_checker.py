@@ -33,6 +33,6 @@ class PasswordChecker:
 
         for hash in leaked_hashes:
             if hash[0] == hash_to_check:
-                return hash[1]
+                return int(hash[1])
             
         return 0

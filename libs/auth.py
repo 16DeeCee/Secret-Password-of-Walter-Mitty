@@ -3,29 +3,36 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
 import os
 
-SALT_FIXED_LENGTH = 16 # 128-bit is recommended for Argon2
+SALT_FIXED_LENGTH = 16 # 128-bit is recommended for Argon2 salt
 NONCE_FIXED_LENGTH = 12 # 96-bit is recommended for AES
 MAX_HASH_KEY_LENGTH = 32 # 256-bit key is recommended
 
 class Auth:
-    def encrypt_password(plain_password: str) -> bytes:
+    def encrypt_password(plain_master_password: str, plain_password: str) -> bytes:
         '''Encrypt password using AES Encryption.'''
-        derived_key = Auth.generate_hash_key(plain_password, iterations=50)
+        derived_key = Auth.generate_hash_key(plain_master_password, iterations=50)
         salt, key = derived_key[:SALT_FIXED_LENGTH], derived_key[SALT_FIXED_LENGTH:]
         aes_enc = AESGCM(key)
         nonce = os.urandom(NONCE_FIXED_LENGTH)
         encrypted_password = aes_enc.encrypt(nonce, plain_password.encode(), None)
         comb_bytes = salt + nonce + encrypted_password
 
-        print(f"Salt: {salt} Salt length: {len(salt)}\nNonce: {nonce} Nonce length: {len(nonce)}\nEncrypted password: {encrypted_password} Encrypted password length: {len(encrypted_password)}")
+        # print(f"Salt: {salt} Salt length: {len(salt)}\n \
+        #     Nonce: {nonce} Nonce length: {len(nonce)}\n \
+        #     Encrypted password: {encrypted_password}\n \
+        #     Encrypted password length: {len(encrypted_password)}"
+        # )
+
         return comb_bytes
     
     
     def decrypt_password(plain_password: str, hidden_bytes: bytes) -> str:
-        slice_index = NONCE_FIXED_LENGTH * 2
+        slice_index = SALT_FIXED_LENGTH + NONCE_FIXED_LENGTH
         salt = hidden_bytes[:SALT_FIXED_LENGTH]
-        nonce =  hidden_bytes[NONCE_FIXED_LENGTH:slice_index]
+        nonce =  hidden_bytes[SALT_FIXED_LENGTH:slice_index]
         encrypted_pass = hidden_bytes[slice_index:]
+
+        print(salt, nonce, encrypted_pass)
 
         key = Auth.generate_hash_key(plain_password, salt, iterations=50)
         aes_dec = AESGCM(key[SALT_FIXED_LENGTH:])
@@ -80,8 +87,6 @@ class Auth:
         ad: bytes = None, 
         secret: bytes = None
     ) -> Argon2id:
-        
-        # print(salt, " ", length, " ", iterations, " ", lanes, " ", memory_cost, " ", ad, " ", secret)
         
         set_hash = Argon2id(
             salt=salt,

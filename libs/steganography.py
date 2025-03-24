@@ -2,6 +2,9 @@
 from libs.logging import Logging
 from PIL import Image
 from typing import Any
+# import os
+import uuid
+import base64
 
 
 PIXEL_PATTERN = 5
@@ -15,7 +18,7 @@ class Steganography:
         self.encrypted_data =  encrypted_data
 
 
-    def encode_image(self) -> Image.Image:
+    def encode_bytes_in_image(self) -> str:
         enc_data_binary = self.to_binary(self.encrypted_data + DELIMITER)
         enc_data_binary_size = len(enc_data_binary)
 
@@ -56,10 +59,14 @@ class Steganography:
         image.putdata(image_pixels)
 
         log.info("ENCODING FINISHED.")
-        return image
+
+        image_path = f"images/{str(uuid.uuid4())}.png"
+        image.save(image_path)
+
+        return image_path
     
     
-    def decode_image(self) -> bytes:
+    def decode_bytes_in_image(self) -> bytes:
         image = Image.open(self.image_path)
         image_pixels = image.getdata()
 
